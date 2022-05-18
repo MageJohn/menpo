@@ -132,6 +132,7 @@ setup(
     description="A Python toolkit for handling annotated data",
     author="The Menpo Team",
     author_email="hello@menpo.org",
+    ext_modules=cython_exts,
     packages=find_packages(),
     install_requires=install_requires,
     package_data={"menpo": ["data/*"]},
