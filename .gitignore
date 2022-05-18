@@ -28,4 +28,4 @@ MANIFEST
 # mypy
 .dmypy.json
 .mypy_cache/
-
+venv
