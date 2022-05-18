@@ -18,6 +18,42 @@ def get_version_and_cmdclass(package_path):
 
 
 version, cmdclass = get_version_and_cmdclass("menpo")
+def build_extension_from_pyx(pyx_path, extra_sources_paths=None):
+    if extra_sources_paths is None:
+        extra_sources_paths = []
+    extra_sources_paths.insert(0, pyx_path)
+    ext = Extension(name=pyx_path[:-4].replace('/', '.'),
+                    sources=extra_sources_paths,
+                    include_dirs=[NUMPY_INC_PATH],
+                    language='c++')
+    if IS_LINUX or IS_OSX:
+        ext.extra_compile_args.append('-Wno-unused-function')
+    if IS_OSX:
+        ext.extra_link_args.append('-headerpad_max_install_names')
+    return ext
+
+
+try:
+    from Cython.Build import cythonize
+except ImportError:
+    import warnings
+
+    cythonize = no_cythonize
+    warnings.warn('Unable to import Cython - attempting to build using the '
+                  'pre-compiled C++ files.')
+
+cython_modules = [
+    build_extension_from_pyx('menpo/external/skimage/_warps_cy.pyx'),
+    build_extension_from_pyx(
+        'menpo/feature/windowiterator.pyx',
+        extra_sources_paths=['menpo/feature/cpp/ImageWindowIterator.cpp',
+                             'menpo/feature/cpp/WindowFeature.cpp',
+                             'menpo/feature/cpp/HOG.cpp',
+                             'menpo/feature/cpp/LBP.cpp']),
+    build_extension_from_pyx('menpo/image/patches.pyx')
+]
+cython_exts = cythonize(cython_modules, quiet=True,
+                        language_level=sys.version_info[0])
 
 # Please see conda/meta.yaml for other binary dependencies
 install_requires = ["numpy>=1.14", "scipy>=1.0", "matplotlib>=3.0", "pillow>=4.0"]
